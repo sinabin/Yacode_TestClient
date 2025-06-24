@@ -16,21 +16,173 @@
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     mc:Ignorable="d">
 
-    <Grid VerticalAlignment="Top">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="Auto" />
-        </Grid.ColumnDefinitions>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20">
+            
+            <!-- 제목 -->
+            <TextBlock
+                FontSize="24"
+                FontWeight="Bold"
+                Text="Yacode 프린터 제어"
+                Margin="0,0,0,20" />
 
-        <ui:Button
-            Grid.Column="0"
-            Command="{Binding ViewModel.CounterIncrementCommand, Mode=OneWay}"
-            Content="Click me!"
-            Icon="Fluent24" />
-        <TextBlock
-            Grid.Column="1"
-            Margin="12,0,0,0"
-            VerticalAlignment="Center"
-            Text="{Binding ViewModel.Counter, Mode=OneWay}" />
-    </Grid>
+            <!-- 연결 설정 섹션 -->
+            <ui:Card Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock
+                        FontSize="18"
+                        FontWeight="SemiBold"
+                        Text="프린터 연결 설정"
+                        Margin="0,0,0,15" />
+                    
+                    <!-- IP 주소 입력 -->
+                    <Grid Margin="0,0,0,15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        
+                        <TextBlock
+                            Grid.Column="0"
+                            Margin="0,0,10,0"
+                            VerticalAlignment="Center"
+                            Text="IP 주소:" />
+                        
+                        <ui:TextBox
+                            Grid.Column="1"
+                            Text="{Binding ViewModel.PrinterIpAddress, Mode=TwoWay}"
+                            PlaceholderText="예: 192.168.11.50" />
+                    </Grid>
+
+                    <!-- 연결 상태 -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                        <TextBlock Text="연결 상태:" VerticalAlignment="Center" Margin="0,0,10,0" />
+                        <ui:Badge
+                            Content="{Binding ViewModel.ConnectionStatus}"
+                            Appearance="{Binding ViewModel.IsConnected, Converter={StaticResource BoolToAppearanceConverter}}" />
+                    </StackPanel>
+
+                    <!-- 연결/연결해제 버튼 -->
+                    <StackPanel Orientation="Horizontal">
+                        <ui:Button
+                            Command="{Binding ViewModel.ConnectToPrinterCommand}"
+                            Content="연결"
+                            Icon="PlugConnected24"
+                            Appearance="Primary"
+                            IsEnabled="{Binding ViewModel.IsConnected, Converter={StaticResource BoolNegationConverter}}"
+                            Margin="0,0,10,0" />
+                        
+                        <ui:Button
+                            Command="{Binding ViewModel.DisconnectFromPrinterCommand}"
+                            Content="연결 해제"
+                            Icon="PlugDisconnected24"
+                            Appearance="Secondary"
+                            IsEnabled="{Binding ViewModel.IsConnected}" />
+                    </StackPanel>
+                </StackPanel>
+            </ui:Card>
+
+            <!-- 프린터 제어 섹션 -->
+            <ui:Card Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock
+                        FontSize="18"
+                        FontWeight="SemiBold"
+                        Text="프린터 제어"
+                        Margin="0,0,0,15" />
+                    
+                    <!-- 상태 조회 버튼들 -->
+                    <WrapPanel>
+                        <ui:Button
+                            Command="{Binding ViewModel.GetSystemStatusCommand}"
+                            Content="시스템 상태"
+                            Icon="Info24"
+                            Margin="0,0,10,10"
+                            IsEnabled="{Binding ViewModel.IsConnected}" />
+                        
+                        <ui:Button
+                            Command="{Binding ViewModel.GetPrintingStatusCommand}"
+                            Content="인쇄 상태"
+                            Icon="Print24"
+                            Margin="0,0,10,10"
+                            IsEnabled="{Binding ViewModel.IsConnected}" />
+                        
+                        <ui:Button
+                            Command="{Binding ViewModel.GetTestInformationCommand}"
+                            Content="테스트 정보"
+                            Icon="TestBeaker24"
+                            Margin="0,0,10,10"
+                            IsEnabled="{Binding ViewModel.IsConnected}" />
+                    </WrapPanel>
+                </StackPanel>
+            </ui:Card>
+
+            <!-- 카운터 테스트 섹션 -->
+            <ui:Card Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock
+                        FontSize="18"
+                        FontWeight="SemiBold"
+                        Text="테스트 카운터"
+                        Margin="0,0,0,15" />
+                    
+                    <StackPanel Orientation="Horizontal">
+                        <ui:Button
+                            Command="{Binding ViewModel.CounterIncrementCommand, Mode=OneWay}"
+                            Content="클릭하세요!"
+                            Icon="Add24"
+                            Margin="0,0,10,0" />
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontSize="16"
+                            Text="{Binding ViewModel.Counter, Mode=OneWay}" />
+                    </StackPanel>
+                </StackPanel>
+            </ui:Card>
+
+            <!-- 응답 정보 섹션 -->
+            <ui:Card>
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                        <TextBlock
+                            FontSize="18"
+                            FontWeight="SemiBold"
+                            Text="응답 로그"
+                            Margin="0,0,10,0" />
+                        <ui:Button
+                            Command="{Binding ViewModel.ClearLogCommand}"
+                            Content="로그 지우기"
+                            Icon="Delete24"
+                            Appearance="Danger"
+                            FontSize="12"
+                            Padding="8,4" />
+                    </StackPanel>
+                    
+                    <!-- 마지막 응답 -->
+                    <StackPanel Margin="0,0,0,15">
+                        <TextBlock Text="마지막 응답:" FontWeight="Medium" Margin="0,0,0,5" />
+                        <ui:TextBox
+                            Text="{Binding ViewModel.LastResponse, Mode=OneWay}"
+                            IsReadOnly="True"
+                            TextWrapping="Wrap"
+                            MaxLines="3" />
+                    </StackPanel>
+                    
+                    <!-- 로그 메시지 -->
+                    <StackPanel>
+                        <TextBlock Text="로그 메시지:" FontWeight="Medium" Margin="0,0,0,5" />
+                        <ScrollViewer Height="200" VerticalScrollBarVisibility="Auto">
+                            <ui:TextBox
+                                Text="{Binding ViewModel.LogMessages, Mode=OneWay}"
+                                IsReadOnly="True"
+                                TextWrapping="Wrap"
+                                VerticalAlignment="Stretch"
+                                AcceptsReturn="True" />
+                        </ScrollViewer>
+                    </StackPanel>
+                </StackPanel>
+            </ui:Card>
+
+        </StackPanel>
+    </ScrollViewer>
 </Page>

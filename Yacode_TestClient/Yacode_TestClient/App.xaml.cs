@@ -42,6 +42,9 @@ namespace Yacode_TestClient
                 // Service containing navigation, same as INavigationWindow... but without window
                 services.AddSingleton<INavigationService, NavigationService>();
 
+                // Yacode 프린터 서비스 등록
+                services.AddSingleton<YacodeClientService>();
+
                 // Main window with navigation
                 services.AddSingleton<INavigationWindow, MainWindow>();
                 services.AddSingleton<MainWindowViewModel>();
