@@ -1,5 +1,4 @@
 ﻿using Yacode_TestClient.Services;
-using System.Windows;
 
 namespace Yacode_TestClient.ViewModels.Pages
 {
@@ -14,7 +13,7 @@ namespace Yacode_TestClient.ViewModels.Pages
         private bool _isConnected = false;
 
         [ObservableProperty]
-        private string _printerIpAddress = "169.254.14.230";
+        private string _printerIpAddress = "192.168.11.50";
 
         [ObservableProperty]
         private string _connectionStatus = "연결되지 않음";
