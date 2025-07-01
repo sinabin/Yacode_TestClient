@@ -1,4 +1,6 @@
-﻿using Yacode_TestClient.Services;
+﻿using System.Collections.ObjectModel;
+using System.IO;
+using Yacode_TestClient.Services;
 
 namespace Yacode_TestClient.ViewModels.Pages
 {
@@ -22,7 +24,25 @@ namespace Yacode_TestClient.ViewModels.Pages
         private string _lastResponse = string.Empty;
 
         [ObservableProperty]
-        private string _logMessages = string.Empty;
+        private string logMessages = string.Empty;
+        
+        [ObservableProperty]
+        private string printMessage = string.Empty;
+
+        [ObservableProperty]
+        private string imageFilePath = string.Empty;
+        
+        [ObservableProperty]
+        private bool showResultInfo;
+
+        [ObservableProperty]
+        private string resultMessage = string.Empty;
+
+        [ObservableProperty]
+        private string resultSeverity = "Success"; // "Success", "Error", "Warning", "Info"
+        
+        [ObservableProperty]
+        private ObservableCollection<string> recentTemplateNames = new();
 
         public DashboardViewModel(YacodeClientService yacodeClient)
         {
@@ -196,6 +216,116 @@ namespace Yacode_TestClient.ViewModels.Pages
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+        
+        [RelayCommand]
+        private void SelectImage()
+        {
+            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Image files (*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg"
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                ImageFilePath = openFileDialog.FileName;
+            }
+        }
+
+        
+        [RelayCommand]
+        private async Task SendToPrinter()
+        {
+            if (string.IsNullOrWhiteSpace(PrintMessage))
+            {
+                SetResult("메시지를 입력해주세요.", "Warning");
+                AddLogMessage("⚠️ 전송 실패: 메시지가 비어 있습니다.");
+                return;
+            }
+
+            var payload = new Dictionary<string, object>
+            {
+                { "message", PrintMessage }
+            };
+
+            if (!string.IsNullOrWhiteSpace(ImageFilePath) && File.Exists(ImageFilePath))
+            {
+                var base64Image = Convert.ToBase64String(File.ReadAllBytes(ImageFilePath));
+                payload["image"] = base64Image;
+                payload["image_format"] = Path.GetExtension(ImageFilePath).Trim('.');
+                AddLogMessage("📦 이미지 포함하여 전송 준비 완료");
+            }
+            else
+            {
+                AddLogMessage("✉️ 텍스트만 포함하여 전송 준비 완료");
+            }
+
+            AddLogMessage("📤 프린터로 데이터 전송 중...");
+
+            // 1. 동적 콘텐츠 전송
+            var success = await _yacodeClient.SendDynamicContentAsync("text+image", payload);
+
+            if (!success)
+            {
+                SetResult("프린터 전송 실패!", "Error");
+                AddLogMessage("❌ 프린터 전송 실패");
+                return;
+            }
+
+            AddLogMessage("✅ 프린터 전송 성공");
+
+            // 2. Start Printing 호출
+            string templateName = "100.ym"; // 실제 프린터에 업로드된 템플릿 이름
+            AddLogMessage($"🖨️ StartPrinting 명령 호출: {templateName}");
+            var startResult = await _yacodeClient.StartPrintingAsync(templateName);
+
+            if (startResult)
+            {
+                SetResult("프린터 인쇄 시작!", "Success");
+                AddLogMessage("✅ 인쇄 시작 명령 전송 완료");
+            }
+            else
+            {
+                SetResult("인쇄 시작 실패!", "Error");
+                AddLogMessage("❌ 인쇄 시작 명령 실패");
+            }
+        }
+
+
+
+        private void SetResult(string message, string severity)
+        {
+            ResultMessage = message;
+            ResultSeverity = severity;
+            ShowResultInfo = true;
+        }
+        [RelayCommand]
+        private void ClearResult()
+        {
+            ShowResultInfo = false;
+            ResultMessage = string.Empty;
+        }
+        
+        [RelayCommand]
+        private async Task LoadRecentTemplatesAsync()
+        {
+            if (!_yacodeClient.IsConnected)
+            {
+                AddLogMessage("❌ 프린터가 연결되지 않았습니다.");
+                return;
+            }
+
+            AddLogMessage("📥 최근 템플릿 목록 조회 중...");
+
+            var names = await _yacodeClient.GetPrintingLogTemplateNamesAsync();
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                RecentTemplateNames.Clear();
+                foreach (var name in names.Distinct())
+                    RecentTemplateNames.Add(name);
+            });
+
+            AddLogMessage("📋 최근 템플릿 목록 불러오기 완료");
         }
     }
 }

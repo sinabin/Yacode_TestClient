@@ -5,20 +5,20 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Yacode_TestClient.Views.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:ui="http://schemas.lepoco.dev/wpfui/2023"
+    xmlns:markup="http://schemas.lepo.co/wpfui/2022/xaml"
     Title="DashboardPage"
-    d:DataContext="{d:DesignInstance local:DashboardPage,
-                                     IsDesignTimeCreatable=False}"
+    d:DataContext="{d:DesignInstance local:DashboardPage, IsDesignTimeCreatable=False}"
     d:DesignHeight="450"
     d:DesignWidth="800"
-    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
-    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    markup:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    markup:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     mc:Ignorable="d">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="20">
-            
+
             <!-- 제목 -->
             <TextBlock
                 FontSize="24"
@@ -27,52 +27,51 @@
                 Margin="0,0,0,20" />
 
             <!-- 연결 설정 섹션 -->
-            <ui:Card Margin="0,0,0,20">
+            <markup:Card Margin="0,0,0,20">
                 <StackPanel>
                     <TextBlock
                         FontSize="18"
                         FontWeight="SemiBold"
                         Text="프린터 연결 설정"
                         Margin="0,0,0,15" />
-                    
+
                     <!-- IP 주소 입력 -->
                     <Grid Margin="0,0,0,15">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        
+
                         <TextBlock
                             Grid.Column="0"
                             Margin="0,0,10,0"
                             VerticalAlignment="Center"
                             Text="IP 주소:" />
-                        
-                        <ui:TextBox
+
+                        <markup:TextBox
                             Grid.Column="1"
-                            Text="{Binding ViewModel.PrinterIpAddress, Mode=TwoWay}"
-                            PlaceholderText="예: 192.168.11.50" />
+                            Text="{Binding ViewModel.PrinterIpAddress, Mode=TwoWay}"/>
                     </Grid>
 
                     <!-- 연결 상태 -->
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                         <TextBlock Text="연결 상태:" VerticalAlignment="Center" Margin="0,0,10,0" />
-                        <ui:Badge
+                        <markup:Badge
                             Content="{Binding ViewModel.ConnectionStatus}"
                             Appearance="{Binding ViewModel.IsConnected, Converter={StaticResource BoolToAppearanceConverter}}" />
                     </StackPanel>
 
                     <!-- 연결/연결해제 버튼 -->
                     <StackPanel Orientation="Horizontal">
-                        <ui:Button
+                        <markup:Button
                             Command="{Binding ViewModel.ConnectToPrinterCommand}"
                             Content="연결"
                             Icon="PlugConnected24"
                             Appearance="Primary"
                             IsEnabled="{Binding ViewModel.IsConnected, Converter={StaticResource BoolNegationConverter}}"
                             Margin="0,0,10,0" />
-                        
-                        <ui:Button
+
+                        <markup:Button
                             Command="{Binding ViewModel.DisconnectFromPrinterCommand}"
                             Content="연결 해제"
                             Icon="PlugDisconnected24"
@@ -80,68 +79,75 @@
                             IsEnabled="{Binding ViewModel.IsConnected}" />
                     </StackPanel>
                 </StackPanel>
-            </ui:Card>
+            </markup:Card>
 
             <!-- 프린터 제어 섹션 -->
-            <ui:Card Margin="0,0,0,20">
+            <markup:Card Margin="0,0,0,20">
                 <StackPanel>
                     <TextBlock
                         FontSize="18"
                         FontWeight="SemiBold"
                         Text="프린터 제어"
                         Margin="0,0,0,15" />
-                    
+
                     <!-- 상태 조회 버튼들 -->
                     <WrapPanel>
-                        <ui:Button
+                        <markup:Button
                             Command="{Binding ViewModel.GetSystemStatusCommand}"
                             Content="시스템 상태"
                             Icon="Info24"
                             Margin="0,0,10,10"
                             IsEnabled="{Binding ViewModel.IsConnected}" />
-                        
-                        <ui:Button
+
+                        <markup:Button
                             Command="{Binding ViewModel.GetPrintingStatusCommand}"
                             Content="인쇄 상태"
                             Icon="Print24"
                             Margin="0,0,10,10"
                             IsEnabled="{Binding ViewModel.IsConnected}" />
-                        
-                        <ui:Button
+
+                        <markup:Button
                             Command="{Binding ViewModel.GetTestInformationCommand}"
                             Content="테스트 정보"
                             Icon="TestBeaker24"
                             Margin="0,0,10,10"
                             IsEnabled="{Binding ViewModel.IsConnected}" />
                     </WrapPanel>
-                </StackPanel>
-            </ui:Card>
 
-            <!-- 카운터 테스트 섹션 -->
-            <!--<ui:Card Margin="0,0,0,20">
-                <StackPanel>
-                    <TextBlock
-                        FontSize="18"
-                        FontWeight="SemiBold"
-                        Text="테스트 카운터"
-                        Margin="0,0,0,15" />
-                    
-                    <StackPanel Orientation="Horizontal">
-                        <ui:Button
-                            Command="{Binding ViewModel.CounterIncrementCommand, Mode=OneWay}"
-                            Content="클릭하세요!"
-                            Icon="Add24"
+                    <!-- 메시지 입력 -->
+                    <markup:TextBox
+                        Text="{Binding ViewModel.PrintMessage, UpdateSourceTrigger=PropertyChanged}"
+                        Margin="0,10,0,10"
+                        Height="40"/>
+
+                    <!-- 이미지 선택 -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <markup:TextBox
+                            Text="{Binding ImageFilePath, UpdateSourceTrigger=PropertyChanged}"
+                            IsReadOnly="True"
+                            Width="260"
                             Margin="0,0,10,0" />
-                        <TextBlock
-                            VerticalAlignment="Center"
-                            FontSize="16"
-                            Text="{Binding ViewModel.Counter, Mode=OneWay}" />
+                        <markup:Button Content="이미지 선택" Command="{Binding ViewModel.SelectImageCommand}" />
                     </StackPanel>
-                </StackPanel>
-            </ui:Card>-->
 
+                    <!-- 전송 버튼 -->
+                    <markup:Button
+                        Content="프린터로 전송"
+                        Command="{Binding ViewModel.SendToPrinterCommand}"
+                        Height="40"
+                        Appearance="Primary" />
+                </StackPanel>
+            </markup:Card>
+            
+            <markup:InfoBar
+                IsOpen="{Binding ShowResultInfo, Mode=TwoWay}"
+                Title="{Binding ResultMessage}"
+                Severity="{Binding ResultSeverity}"
+                IsClosable="True"
+                Margin="0,0,0,10" />
+            
             <!-- 응답 정보 섹션 -->
-            <ui:Card>
+            <markup:Card>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                         <TextBlock
@@ -149,7 +155,7 @@
                             FontWeight="SemiBold"
                             Text="응답 로그"
                             Margin="0,0,10,0" />
-                        <ui:Button
+                        <markup:Button
                             Command="{Binding ViewModel.ClearLogCommand}"
                             Content="로그 지우기"
                             Icon="Delete24"
@@ -157,22 +163,22 @@
                             FontSize="12"
                             Padding="8,4" />
                     </StackPanel>
-                    
+
                     <!-- 마지막 응답 -->
                     <StackPanel Margin="0,0,0,15">
                         <TextBlock Text="마지막 응답:" FontWeight="Medium" Margin="0,0,0,5" />
-                        <ui:TextBox
+                        <markup:TextBox
                             Text="{Binding ViewModel.LastResponse, Mode=OneWay}"
                             IsReadOnly="True"
                             TextWrapping="Wrap"
                             MaxLines="3" />
                     </StackPanel>
-                    
+
                     <!-- 로그 메시지 -->
                     <StackPanel>
                         <TextBlock Text="로그 메시지:" FontWeight="Medium" Margin="0,0,0,5" />
                         <ScrollViewer Height="200" VerticalScrollBarVisibility="Auto">
-                            <ui:TextBox
+                            <markup:TextBox
                                 Text="{Binding ViewModel.LogMessages, Mode=OneWay}"
                                 IsReadOnly="True"
                                 TextWrapping="Wrap"
@@ -181,7 +187,21 @@
                         </ScrollViewer>
                     </StackPanel>
                 </StackPanel>
-            </ui:Card>
+            </markup:Card>
+            
+            <markup:Card Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock FontSize="16" FontWeight="SemiBold" Text="최근 템플릿 목록" Margin="0,0,0,10" />
+                    <markup:Button Content="목록 새로고침" Command="{Binding  ViewModel.LoadRecentTemplatesCommand}" Margin="0,0,0,10"/>
+                    <ItemsControl ItemsSource="{Binding RecentTemplateNames}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" Margin="5,0" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </markup:Card>
 
         </StackPanel>
     </ScrollViewer>
