@@ -120,6 +120,7 @@ namespace Yacode_TestClient.Services
                 }
 
                 var messageBytes = message.ToByteArray();
+                Console.WriteLine("Transferred Byte (HEX): " + BitConverter.ToString(messageBytes));
                 await _stream.WriteAsync(messageBytes, 0, messageBytes.Length);
                 await _stream.FlushAsync();
 
@@ -208,9 +209,11 @@ namespace Yacode_TestClient.Services
         {
             try
             {
+                // print_file 키는 Yacode 프린터 장비의 시작 인쇄(Start Printing) 명령에서 "어떤 템플릿 파일을 사용하여 인쇄할지"를 지정하는 필드이다.
+                // 이는 장비 측 펌웨어에서 요구하는 JSON 키 이름이 "print_file"이기 때문임!
                 var payload = new
                 {
-                    template = templateFileName
+                    print_file = templateFileName
                 };
 
                 var message = new YacodeProtocolMessage
