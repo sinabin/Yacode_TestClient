@@ -1,4 +1,5 @@
 ﻿using System.Net.Sockets;
+using System.Text;
 using System.Text.Json;
 
 namespace Yacode_TestClient.Services
@@ -13,6 +14,8 @@ namespace Yacode_TestClient.Services
         public event EventHandler<bool>? ConnectionStatusChanged;
         public event EventHandler<string>? MessageReceived;
         public event EventHandler<string>? ErrorOccurred;
+        
+        public event EventHandler<int>? PrintYieldUpdated;
 
         public bool IsConnected 
         { 
@@ -181,8 +184,42 @@ namespace Yacode_TestClient.Services
         public async Task<bool> GetPrintingStatusAsync(int groupId = 0)
         {
             var message = YacodeProtocolMessage.CreatePrintingStatusRequest(groupId);
-            return await SendMessageAsync(message);
+
+            TaskCompletionSource<string> tcs = new();
+            void Handler(object? sender, string data)
+            {
+                tcs.TrySetResult(data);
+            }
+
+            MessageReceived += Handler;
+
+            var sent = await SendMessageAsync(message);
+            if (!sent)
+            {
+                MessageReceived -= Handler;
+                return false;
+            }
+
+            var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(3000));
+            MessageReceived -= Handler;
+
+            if (completedTask != tcs.Task)
+                return false;
+
+            var responseJson = tcs.Task.Result;
+            if (!string.IsNullOrEmpty(responseJson))
+            {
+                using var doc = JsonDocument.Parse(responseJson);
+                if (doc.RootElement.TryGetProperty("print_yield", out var yieldElement))
+                {
+                    var yield = yieldElement.GetInt32();
+                    PrintYieldUpdated?.Invoke(this, yield);
+                }
+            }
+
+            return true;
         }
+
 
         /// <summary>
         /// 테스트 정보 요청
@@ -231,16 +268,10 @@ namespace Yacode_TestClient.Services
             }
         }
 
-        public async Task<bool> SendDynamicContentAsync(string contentType, object contentData)
+        public async Task<bool> SendRawDynamicDataAsync(object payload)
         {
             try
             {
-                var payload = new
-                {
-                    type = contentType,      // 예: "text", "image"
-                    data = contentData       // 예: 문자열 or Base64 인코딩된 이미지
-                };
-
                 var message = new YacodeProtocolMessage
                 {
                     ProtocolMark = YacodeProtocolMessage.ProtocolMarks.SET_DYNAMIC_DATA,
@@ -255,6 +286,49 @@ namespace Yacode_TestClient.Services
                 return false;
             }
         }
+        
+        public async Task<bool> SendRawDynamicDataAsync(object payload, byte[]? imageBytes = null)
+        {
+            try
+            {
+                string json = JsonSerializer.Serialize(payload);
+                var jsonBytes = Encoding.UTF8.GetBytes(json + "\0");
+
+                var totalBytes = new List<byte>();
+                totalBytes.AddRange(new byte[] { 0xEB, 0x01 }); // Header
+                totalBytes.AddRange(new byte[] { 0x00, 0x04 }); // Protocol mark
+
+                var dataLength = jsonBytes.Length + (imageBytes?.Length ?? 0);
+                var lengthBytes = BitConverter.GetBytes(dataLength);
+                if (BitConverter.IsLittleEndian) Array.Reverse(lengthBytes);
+                totalBytes.AddRange(lengthBytes);
+
+                totalBytes.AddRange(jsonBytes);
+                if (imageBytes != null) totalBytes.AddRange(imageBytes);
+
+                var messageBytes = totalBytes.ToArray();
+                Console.WriteLine("전송 바이트: " + BitConverter.ToString(messageBytes));
+
+                if (!IsConnected || _stream == null)
+                {
+                    ErrorOccurred?.Invoke(this, "프린터가 연결되지 않았습니다.");
+                    return false;
+                }
+
+                await _stream.WriteAsync(messageBytes, 0, messageBytes.Length);
+                await _stream.FlushAsync();
+
+                await ReceiveResponseAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ErrorOccurred?.Invoke(this, $"Raw 데이터 전송 실패: {ex.Message}");
+                return false;
+            }
+        }
+
+
         
         public async Task<List<string>> GetRecentTemplateNamesAsync()
         {
@@ -387,6 +461,43 @@ namespace Yacode_TestClient.Services
             }
 
             return templateNames;
+        }
+        
+        public async Task<bool> GetTemplateMetaInfoAsync()
+        {
+            var message = YacodeProtocolMessage.CreateTestInformationRequest();
+
+            TaskCompletionSource<string> tcs = new();
+
+            void Handler(object? sender, string data)
+            {
+                tcs.TrySetResult(data);
+            }
+
+            MessageReceived += Handler;
+
+            var sent = await SendMessageAsync(message);
+            if (!sent)
+            {
+                MessageReceived -= Handler;
+                return false;
+            }
+
+            var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(3000));
+            MessageReceived -= Handler;
+
+            if (completedTask != tcs.Task)
+            {
+                ErrorOccurred?.Invoke(this, "메타정보 응답 수신 시간 초과");
+                return false;
+            }
+
+            var responseJson = tcs.Task.Result;
+
+            // 로그 출력용으로 이벤트 발생
+            MessageReceived?.Invoke(this, "📄 문서 메타정보 응답:\n" + responseJson);
+
+            return true;
         }
 
 

@@ -35,6 +35,8 @@ namespace Yacode_TestClient.Services
         public byte[] ProtocolMark { get; set; }
         public int DataLength { get; set; }
         public string Data { get; set; }
+        
+        public byte[]? RawData { get; set; } 
 
         public YacodeProtocolMessage()
         {
