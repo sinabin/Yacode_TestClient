@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Yacode_TestClient")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7720a6f15b914a4c23d08d08e1ed4855d0ad8c0e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e45f27a60d4657ac33abc709410cfb374ed67215")]
 [assembly: System.Reflection.AssemblyProductAttribute("Yacode_TestClient")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Yacode_TestClient")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

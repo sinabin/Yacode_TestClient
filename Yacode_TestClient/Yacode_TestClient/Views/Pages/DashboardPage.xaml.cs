@@ -14,15 +14,6 @@ namespace Yacode_TestClient.Views.Pages
 
             InitializeComponent();
         }
-        
-        private void InfoBar_Closed(object sender, System.EventArgs e)
-        {
-            if (DataContext is DashboardViewModel vm)
-            {
-                vm.ClearResultCommand.Execute(null);
-            }
-        }
 
-        
     }
 }
